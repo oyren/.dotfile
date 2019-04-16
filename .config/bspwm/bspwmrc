@@ -40,9 +40,7 @@ bspc rule -a Screenkey manage=off
 bspc rule -a Emacs state=tiled
 bspc rule -a libreoffice state=tiled
 bspc rule -a zatharu state=tiled
-#bspc rule -a plasmashell manage=off
 bspc rule -a plasmashell state=floating
-#bspc rule -a Plasma manage=off
 bspc rule -a Plasma state=floating
 
 sleep 5
