@@ -1,4 +1,4 @@
-
+let mapleader =  " " 
 
 call plug#begin('~/.config/nvim/plugged')
 Plug 'icymind/NeoSolarized'
