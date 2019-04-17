@@ -6,3 +6,6 @@ call plug#end()
 
 set background=light
 colorscheme NeoSolarized
+
+
+set clipboard+=unnamedplus
