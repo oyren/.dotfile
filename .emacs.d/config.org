@@ -1,0 +1,8 @@
+* Turn off menu bar
+#+BEGIN_SRC emacs-lisp
+(menu-bar-mode -1)
+
+(add-to-list 'load-path "~/.emacs.d/evil")
+(require 'evil)
+(evil-mode 1)
+#+END_SRC
