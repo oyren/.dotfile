@@ -1,8 +1,271 @@
-* Turn off menu bar
-#+BEGIN_SRC emacs-lisp
-(menu-bar-mode -1)
+* Setup
+Inside ~/.emacs.d/init.el put the following too load config.org.
 
-(add-to-list 'load-path "~/.emacs.d/evil")
+#+BEGIN_SRC
+(require 'org)
+(org-babel-load-file
+ (expand-file-name "config.org"
+                   user-emacs-directory))
+#+END_SRC
+
+When you start Emacs, it will automatically determine if the config.org file has changed, and if needed, tangle it to produce a config.el file which will be loaded.
+* Cheat Sheet
+C = Ctrl
+M = Alt
+C-g quite a command
+C-h v Documentation to given variable (overwritten SPC-h-v)
+C-h f Documentation to given function (overwritten SPC-h-f)
+M-x execude given function
+
+* Preferences
+** Some Default
+Emacs being really old, some of its default configuration are somewhat — er — mysterious and mystical.
+#+BEGIN_SRC emacs-lisp
+(setq delete-old-versions -1 )		; delete excess backup versions silently
+(setq version-control t )		; use version control
+(setq vc-make-backup-files t )		; make backups file even when in version controlled dir
+(setq backup-directory-alist `(("." . "~/.emacs.d/backups")) ) ; which directory to put backups file
+(setq vc-follow-symlinks t )				       ; don't ask for confirmation when opening symlinked file
+(setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)) ) ;transform backups file name
+(setq inhibit-startup-screen t )	; inhibit useless and old-school startup screen
+(setq ring-bell-function 'ignore )	; silent bell when you make a mistake
+(setq coding-system-for-read 'utf-8 )	; use utf-8 by default
+(setq coding-system-for-write 'utf-8 )
+(setq sentence-end-double-space nil)	; sentence SHOULD end with only a point.
+(setq default-fill-column 80)		; toggle wrapping text at the 80th character
+(setq initial-scratch-message "Welcome in Emacs") ; print a default message in the empty scratch buffer opened at startup
+(setq show-paren-mode 1) ;; turn on highlight matching brackets when cursor is on one
+(setq x-select-enable-clipboard t) ;; Use sytem clipboar
+#+END_SRC
+
+** use-package
+#+BEGIN_SRC emacs-lisp
+(require 'package)
+(setq package-enable-at-startup nil) ; tells emacs not to load any packages before starting up
+;; the following lines tell emacs where on the internet to look up
+;; for new packages.
+(setq package-archives '(("org"       . "http://orgmode.org/elpa/")
+                         ("gnu"       . "http://elpa.gnu.org/packages/")
+                         ("melpa"     . "https://melpa.org/packages/")
+                         ("marmalade" . "http://marmalade-repo.org/packages/")))
+(package-initialize)
+
+;; Bootstrap `use-package'
+(unless (package-installed-p 'use-package) ; unless it is already installed
+  (package-refresh-contents) ; updage packages archive
+  (package-install 'use-package)) ; and install the most recent version of use-package
+(require 'use-package)
+#+END_SRC
+* Packages
+** Evil
+Enable Evil
+#+BEGIN_SRC emacs-lisp
+(use-package evil :ensure t)
+(use-package undo-tree :ensure t)
 (require 'evil)
 (evil-mode 1)
 #+END_SRC
+** Which-Key
+#+BEGIN_SRC emacs-lisp
+(use-package which-key :ensure t
+:init ;; :init keyword to execute code before a package is loaded
+(setq which-key-idle-delay 0.3) ;; Set the time delay (in seconds) for the which-key popup to appear. A value of zero might cause issues so a non-zero value is recommended.
+:config ;; :config can be used to execute code after a package is loaded
+(which-key-mode) ; enable which-key
+)
+#+END_SRC
+** Ivy (Swiper, Counsel)
+*Ivy* provides an interface to list, search, filter and perform actions on a collcection of "things".
+These "things" can range from strings to buffers, Ivy doesn't really care. It just provides a way for the user to interact with this collection.
+
+*Counsel*, a collection of Ivy-enhanced versions of common Emacs commands.
+
+*Swiper* is an easy way to search through the current buffer.
+
+Installing Counsel will bring in Ivy and Swiper as dependencies.
+#+BEGIN_SRC emacs-lisp
+(use-package counsel :ensure t
+:init
+(ivy-mode 1) ; enable ivy globally at startup
+(counsel-mode 1) ; enable counsel-mode globally at startup
+(setq ivy-use-virtual-buffers t
+            ivy-count-format "%d/%d " ; Displaying the current candidate count for 'ivy-read' %d/%d to display both the index and the count
+))
+#+END_SRC
+Enabling counsel-mode remaps built-in Emacs functions that have counsel replacements:
+
+| Emacs command	    | Counsel equivalent                 |
+| execute-extended-command | counsel-M-x                        |
+| describe-bindings        | counsel-descbinds                  |
+| describe-function        | counsel-describe-function          |
+| describe-variable        | counsel-describe-variable          |
+| apropos-command          | counsel-apropos                    |
+| describe-face            | counsel-describe-face              |
+| list-faces-display       | 	counsel-faces              |
+| find-file                | counsel-find-file                  |
+| find-library             | counsel-find-library               |
+| imenu                    | counsel-imenu                      |
+| load-library             | counsel-load-library               |
+| load-theme               | counsel-load-theme                 |
+| yank-pop                 | counsel-yank-pop                   |
+| info-lookup-symbol       | 	counsel-info-lookup-symbol |
+| pop-to-mark-command      | 	counsel-mark-ring          |
+| bookmark-jump            | counsel-bookmark                   |
+** Avy
+#+BEGIN_SRC emacs-lisp
+(use-package avy :ensure t
+:commands (avy-goto-world-1 avy-goto-char-2) ; only load this package when this commands are loaded.
+)
+#+END_SRC
+** General
+Should always stay at the bottom of Packages section
+#+BEGIN_SRC emacs-lisp
+(use-package general :ensure t)  ; should check for gerneral package and make sure it is accessible
+; ensure t tells use-package to download it
+#+END_SRC
+*** Keybindings
+general-define-key' acts like `evil-define-key' when :states is specified
+
+**** Gloabal Keybindings
+Bind states:
+motion state  (inherited by the normal, visual, and operator states
+#+BEGIN_SRC emacs-lisp
+(general-auto-unbind-keys) ; required for SPC
+(general-define-key
+:states 'motion ; normal, visual, and operator states
+:prefix "SPC"
+"0" '(winum-select-window-0-or-10 :which-key "windows 0")
+"1" '(winum-select-window-1 :which-key "window 1")
+"2" '(winum-select-window-2 :which-key "window 2")
+"3" '(winum-select-window-3 :which-key "window 3")
+"4" '(winum-select-window-4 :which-key "window 4")
+"5" '(winum-select-window-5 :which-key "window 5")
+"6" '(winum-select-window-6 :which-key "window 6")
+"7" '(winum-select-window-7 :which-key "window 7")
+"8" '(winum-select-window-8 :which-key "window 8")
+"9" '(winum-select-window-9 :which-key "window 9")
+
+"'" 'shell
+
+"a" '(:ignore t :which-key "Applications")
+"au" 'undo-tree-visualize
+
+"b" '(:ignore t :which-key "Buffer")
+"bb" 'ivy-switch-buffer ; change buffer
+"bd" 'kill-this-buffer
+
+"f" '(:ignore t :which-key "File")
+"ff" '(counsel-find-file :which-key "Find File") ; find file using ivy
+"fe" 'counsel-find-file-extern ; find file and open it with xdg-open
+"fF" 'counsel-fzf ; search for files without path
+
+"j" '(:ignore t :which-key "Jump")
+"jj" 'avy-goto-char-2
+"jw" 'avy-goto-word-1
+
+"h" '(:ignore t :which-key "Help")
+"hb" 'counsel-descbinds
+"hf" 'counsel-describe-function
+"hk" 'describe-key
+"hh" 'help
+"hv" 'counsel-describe-variable
+
+"p" '(:ignore t :which-key "Project")
+
+"t" '(:ignore t :which-key "Toggle")
+"tl" '('truncate-lines :which-key "toggle line wrap/truncate")
+
+"w" '(:ignore t :which-key "Window")
+"wd" 'evil-window-delete
+"wv" 'evil-window-vsplit
+"wh" 'evil-window-split
+)
+(general-define-key
+"C-h" 'evil-window-left
+"C-j" 'evil-window-down
+"C-k" 'evil-window-up
+"C-l" 'evil-window-right
+"C-S-H" 'evil-window-increase-width ; Ctrl-Shift-j
+"C-S-J" 'evil-window-decrease-height
+"C-S-K" 'evil-window-increase-height
+"C-S-L" 'evil-window-decrease-width
+)
+
+
+(general-define-key
+:states 'motion ; normal, visual, and operator states
+"J" 'move-text-down
+"K" 'move-text-up
+)
+#+END_SRC
+**** Mode Keybindings
+
+** Evil-Escape
+Customizable key sequence to escape from insert state and everything else in Emacs.
+#+BEGIN_SRC emacs-lisp
+;(use-package evil-escape :ensure t)
+#+END_SRC
+** Org
+#+BEGIN_SRC emacs-lisp
+  ;;(setq-default indent-tabs-mode nil)
+  ;(setq org-src-tab-acts-natively t) ;; Enable TAB in a code block
+  ;(setq org-src-preserve-indentation t)
+  ;(setq org-src-fontify-natively t
+  ;    org-src-window-setup 'current-window
+  ;    org-src-strip-leading-and-trailing-blank-lines t
+  ;    org-src-preserve-indentation t
+  ;    org-src-tab-acts-natively t)
+
+(setq org-startup-truncated nil) ;; enables linewrap for org-mode
+(setq org-export-default-language "de") ;; Language to use for translating certain strings (needs package "texlive-lang-german" in debian)
+(setq org-latex-default-figure-position "H") ; Places the float (image/tables) at precisely the location in the LaTeX code. 
+  (setq org-latex-listings 'minted
+	org-latex-packages-alist '(("" "minted"))
+	org-latex-pdf-process
+	'("pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+	  "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+
+  (setq org-latex-minted-options
+	  '(("frame" "lines") ;; frame=lines Draws two lines, one on top and one at the bottom of the code to frame it. Other possible values are leftline, topline, bottomlines and single.
+  ;;	  ("linenos=true") ;; linenos Enables line numbers.
+	    ("breaklines" "true")
+	    ("breakanywhere" "true")
+	    ;; bgcolor=LightGray Background colour set to light grey. You need to import xcolor for this to work.
+  ))
+
+(setq org-latex-logfiles-extensions (quote ("lof" "lot" "tex~" "aux" "idx" "log" "out" "toc" "nav" "snm" "vrb" "dvi" "fdb_latexmk" "blg" "brf" "fls" "entoc" "ps" "spl" "bbl"))) ;; Cleanup org-mode export intermediary directories
+#+END_SRC
+** Winum
+Window numbers for Emacs.
+#+BEGIN_SRC emacs-lisp
+(use-package winum :ensure t)
+(winum-mode)
+#+END_SRC
+** MoveText
+MoveText allows you to move the current line or region down/up using M-j / M-k.
+#+BEGIN_SRC emacs-lisp
+(use-package move-text :ensure t
+:commands (move-text-down move-text-up) ; only load this package when this commands are loaded.
+)
+#+END_SRC
+* Appearance
+** Turn off menu-,tool, and scroll-bar
+#+BEGIN_SRC emacs-lisp
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+#+END_SRC
+
+** Theme
+http://pawelbx.github.io/emacs-theme-gallery/
+#+BEGIN_SRC emacs-lisp
+;(use-package solarized-theme :ensure t)
+;(load-theme 'solarized-light t)
+(use-package gruvbox-theme :ensure t)
+(load-theme 'gruvbox-light-medium t)
+#+END_SRC
+* Sources
+https://sam217pa.github.io/2016/09/02/how-to-build-your-own-spacemacs/
+https://sam217pa.github.io/2016/08/30/how-to-make-your-own-spacemacs/
+https://writequit.org/denver-emacs/presentations/2017-04-11-ivy.html
+
